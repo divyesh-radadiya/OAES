@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+eureka:
+  instance:
+    hostname: localhost
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+        - id: course-master-service
+          uri: lb://course-master-service
+          predicates:
+            - Path=/course/**
+        - id: item-service
+          uri: lb://item-service
+          predicates:
+            - Path=/item/**
+        - id: question-paper-service
+          uri: lb://question-paper-service
+          predicates:
+            - Path=/questionpaper/**

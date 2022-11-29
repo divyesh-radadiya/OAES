@@ -1,0 +1,16 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: user-service
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      config:
+        failFast: false
+        enabled: true
+        name: oaes
+        format: YAML
+        data-key: application-config.yml

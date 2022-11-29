@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Item_service/Item_service.iml" filepath="$PROJECT_DIR$/Item_service/Item_service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/OAES.iml" filepath="$PROJECT_DIR$/.idea/OAES.iml" />
+      <module fileurl="file://$PROJECT_DIR$/apigateway/apigateway.iml" filepath="$PROJECT_DIR$/apigateway/apigateway.iml" />
+      <module fileurl="file://$PROJECT_DIR$/course_master_service/course_master_service.iml" filepath="$PROJECT_DIR$/course_master_service/course_master_service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/question_paper_service/question_paper_service.iml" filepath="$PROJECT_DIR$/question_paper_service/question_paper_service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/user_service/user_service.iml" filepath="$PROJECT_DIR$/user_service/user_service.iml" />
+    </modules>
+  </component>
+</project>
