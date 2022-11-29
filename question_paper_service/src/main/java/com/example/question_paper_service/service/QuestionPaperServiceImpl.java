@@ -6,10 +6,7 @@ import com.example.question_paper_service.entity.QuestionPaperSet;
 import com.example.question_paper_service.repository.QuestionPaperSetRepo;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -67,24 +64,37 @@ public class QuestionPaperServiceImpl  implements QuestionPaperService {
     public String generateSection(Map<String,Object> section,int courseId)
     {
         String questionType = (String) section.get("questionType");
-        int numberOfQuestion = Integer.parseInt((String) section.get("numberOfQuestion"));
+        String numberOfQuestion = ((String) section.get("numberOfQuestion"));
 
         JSONObject request = new JSONObject();
         request.put("questionType",questionType);
         request.put("numberOfQuestion", numberOfQuestion);
-        request.put("courseId", courseId);
+        request.put("courseId", Integer.toString(courseId));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
 
-        List<Item> items = (List<Item>) this.restTemplate.exchange("http://item-service/item/getRandomItem", HttpMethod.POST,entity, List.class);
+        System.out.println("****");
+
+        List<Map<String ,Object >> responseEntity=  this.restTemplate.postForObject("http://item-service/item/getRandomItem",entity,List.class);
+
+        System.out.println(responseEntity.get(0));
+        System.out.println(responseEntity.get(0).get("itemId"));
+
+//        JSONObject jsonObject = new JSONObject(responseEntity.get(0).toString());
+//        System.out.println(jsonObject.toString());
+//
+//        List<Item> items = (List<Item>) responseEntity.get(0);
+
+//        System.out.println(((Item)(responseEntity.get(0))).getItemId());
 
         String questions = "";
-        for(int i=1;i<=items.size();i++)
+        for(int i=1;i<=responseEntity.size();i++)
         {
             if(i!=1) questions+=",";
-            questions+=Integer.toString(items.get(i-1).getItemId());
+            questions+=responseEntity.get(i-1).get("itemId");
         }
         return questions;
     }

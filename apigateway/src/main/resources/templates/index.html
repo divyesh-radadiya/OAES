@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OAES</title>
+    <base href="/">
+    <script src="../static/main.js"></script>
+    <link rel="stylesheet" href="../static/main.css"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/4.8.95/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+</head>
+<script>
+
+    var courseData;
+    var nonValidatePaperSet;
+    async function login()
+    {
+        const UserName = document.getElementById("userName").value;
+        const Password = document.getElementById("password").value;
+        fetch('http://localhost:8080/user/login',{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({
+                userName:UserName,
+                password:Password
+            })
+        }).then(response => response.json())
+            .then((data) => {
+                if(data)
+                {
+                    document.getElementById("loginBody").style.display = "none";
+                    document.getElementById("homeBody").style.display = "block";  
+                }
+                else
+                {
+                    document.getElementById("msg").innerHTML="Username or Password are wrong!!"
+                }
+            });
+    }
+
+    function removeOptions(selectElement) {
+        var i, L = selectElement.options.length - 1;
+        for(i = L; i >= 0; i--) {
+        selectElement.remove(i);
+        }
+    }
+    function menu1()
+    {
+        document.getElementById("loginBody").style.display = "none";
+        document.getElementById("homeBody").style.display = "block";
+        document.getElementById("Menu1").style.display = "block";
+        document.getElementById("Menu2").style.display = "none";
+        document.getElementById("paperMsg").innerHTML=""
+        getCourseList();
+        
+    }
+    
+    function menu2()
+    {
+        document.getElementById("loginBody").style.display = "none";
+        document.getElementById("homeBody").style.display = "block";
+        document.getElementById("Menu1").style.display = "none";
+        document.getElementById("Menu2").style.display = "block";
+        getNonValidateQuestionPaperSet()
+    }
+
+    function menu3()
+    {
+        document.getElementById("Menu1").style.display = "none";
+        document.getElementById("Menu2").style.display = "none";
+        document.getElementById("loginBody").style.display = "block";
+        document.getElementById("homeBody").style.display = "none";
+    }
+
+    async function getCourseList()
+    {
+        fetch('http://localhost:8080/course/getCourse',{
+            method: 'GET',
+        }).then(response => response.json())
+            .then((data) => {
+
+                courseData = data;
+                select = document.getElementById("sub");
+                removeOptions(select);
+                for(var i=0;i<data.length;i++)
+                {
+                    console.log(data[i].courseName)
+                    var opt = document.createElement("option");
+                    opt.value = i;
+                    opt.innerHTML = data[i].courseName;
+                    select.appendChild(opt);
+                }
+            });
+    }
+
+    async function generatePaper(){
+
+        selectId = document.getElementById("sub").value;
+        courseDetails = courseData[selectId];
+        npaper = document.getElementById("npaper").value;    
+        fetch('http://localhost:8080/questionpaper/generatePaperSet',{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({
+                courseId : courseDetails.courseId.toString(),
+                numberOfQuestionPaper:npaper.toString(),
+                testPattern:courseDetails.testPattern
+            })
+        }).then(response => response.json()
+        ).then((data) => {
+            
+            document.getElementById("paperMsg").style.colot = "green";
+            document.getElementById("paperMsg").innerHTML="Paper Set generated Successfully!!"
+        }).catch(error => {
+            document.getElementById("paperMsg").style.colot = "red";
+            document.getElementById("paperMsg").innerHTML="Error in Paper Set generation!!"
+        });
+    }
+
+    async function getNonValidateQuestionPaperSet()
+    {
+        fetch('http://localhost:8080/questionpaper/nonValidateQuestionPaperSet',{
+            method: 'GET',
+        }).then(response => response.json())
+            .then((data) => {
+
+                nonValidatePaperSet = data;
+                select = document.getElementById("psetId");
+                removeOptions(select);
+                console.log(data)
+                for(var i=0;i<data.length;i++)
+                {
+                    console.log(data[i].courseName)
+                    var opt = document.createElement("option");
+                    opt.value = i;
+                    opt.innerHTML = data[i].setId;
+                    select.appendChild(opt);
+                }
+                select = document.getElementById("pnumber");
+                removeOptions(select);
+            });
+    }
+
+    function selectPaperSet()
+    {
+        paperSet = document.getElementById("psetId").value;
+        select = document.getElementById("pnumber");
+        document.getElementById("cid").value = nonValidatePaperSet[paperSet].courseId;
+        document.getElementById("marks").value = nonValidatePaperSet[paperSet].totalMarks;
+        document.getElementById("np").value = nonValidatePaperSet[paperSet].numberOfQuestionPaper;
+        document.getElementById("ns").value = nonValidatePaperSet[paperSet].numberOfSection;
+        removeOptions(select);
+        for(var i=1;i<=nonValidatePaperSet[paperSet].numberOfQuestionPaper;i++)
+        {
+            var opt = document.createElement("option");
+            opt.value = i;
+            opt.innerHTML = i;
+            select.appendChild(opt);
+        }
+    }
+
+    async function selectPaper()
+    {
+        paperSetSelect = document.getElementById("psetId").value;
+        paperSelect = document.getElementById("pnumber").value;
+        paper = nonValidatePaperSet[paperSetSelect].paperSet[paperSelect];
+        numberOfSection = nonValidatePaperSet[paperSetSelect].numberOfSection;
+
+       
+        var table = document.getElementById("ptable");
+        table.parentNode.removeChild(table);
+        var table = document.createElement('table');
+        table.setAttribute('id','ptable');
+        table.style.width = "100%"
+        table.style.backgroundColor="white";
+        
+        for(var i=1;i<=numberOfSection;i++)
+        {
+            var tr = document.createElement('tr');
+            var td1 = document.createElement('td');
+            td1.innerHTML = "Section: "+i.toString();
+            td1.colSpan = "3";
+            td1.classList.add("p-2")
+            tr.appendChild(td1);
+            var td2 = document.createElement('td');
+            td2.innerHTML = "Marks: "+paper[i].sectionMarks.toString();
+            td2.classList.add("P-2")
+            tr.appendChild(td2);
+            table.append(tr);   
+
+            for(var j=0;j<paper[i].numberOfQuestion;j++)
+            {
+                await getItem(paper[i].questions[j],table,j+1);     
+            }    
+            
+        }
+        papaerSpace = document.getElementById("paper");
+        papaerSpace.appendChild(table);
+        console.log(nonValidatePaperSet[paperSetSelect].paperSet[paperSelect]);
+    }
+
+    async function getItem(ItemId,table,number)
+    {
+        console.log(ItemId)
+        var tr1 = document.createElement('tr');
+        var td3 = document.createElement('td');
+        var tr2 = document.createElement('tr');
+        td3.colSpan = "4";
+        await fetch('http://localhost:8080/item/getItem',{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({
+                itemId :ItemId.toString(),
+            })
+        }).then(response => response.json()
+        ).then((data) => {
+            console.log(data);
+            td3.innerHTML = number.toString()+" "+data.itemDescription.title;
+            tr1.appendChild(td3);
+            table.appendChild(tr1);
+            
+            if(data.category=="mcq")
+            {
+                var tr4 = document.createElement('tr');
+                var td4 = document.createElement('td');
+                td4.innerHTML = '(A) '+data.itemDescription.options.A;
+                tr4.appendChild(td4);
+                table.appendChild(tr4)
+
+                var tr5 = document.createElement('tr');
+                var td5 = document.createElement('td');
+                td5.innerHTML = '(B) '+data.itemDescription.options.B;
+                tr5.appendChild(td5);
+                table.appendChild(tr5)
+                
+                var tr6 = document.createElement('tr');
+                var td6 = document.createElement('td');
+                td6.innerHTML = '(C) '+data.itemDescription.options.C;
+                tr6.appendChild(td6);
+                table.appendChild(tr6)
+                
+                var tr7 = document.createElement('tr');
+                var td7 = document.createElement('td');
+                td7.innerHTML = '(D) '+data.itemDescription.options.D;
+                tr7.appendChild(td7);
+                table.appendChild(tr7);
+
+            }
+            
+                
+        });
+        
+    }
+
+    async function validatePaperSet()
+    {
+        paperSet = document.getElementById("psetId").value;
+        fetch('http://localhost:8080/questionpaper/ValidateQuestionPaperSet',{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({
+                setId :nonValidatePaperSet[paperSet].setId.toString(),
+            })
+        }).then(response => response.json())
+            .then((data) => {
+                menu2();
+                document.getElementById("cid").value = "";
+            document.getElementById("marks").value = "";
+            document.getElementById("np").value = "";
+            document.getElementById("ns").value = "";
+            var table = document.getElementById("ptable");
+            table.parentNode.removeChild(table);
+            var table = document.createElement('table');
+            table.setAttribute('id','ptable');
+            table.style.width = "100%"
+            table.style.backgroundColor="white";
+            document.getElementById("paper").appendChild(table);
+                
+        });
+        
+    }
+</script>
+<style>
+    .header {
+        background-color: darkcyan;
+        height: 10%;
+    }    
+
+    .login-body {
+        background-size: cover;
+        background-color: aquamarine;
+        
+    }
+
+    .home-body {
+        background-size: cover;
+        background-color: aquamarine;
+        
+    }
+
+ 
+
+</style>
+<body>
+    <div class="container p-4 col-12 header" >
+        <h1 style="text-align: center;font-size:xxx-large">Online Assessment Evaluation system</h1>
+    </div>
+    <div id="loginBody" class="login-body" style="display: block;">
+        <div class="row p-5">
+            <div class="col-4"></div>
+            <div class="col-4 login-box">
+                <table>
+                    <tr>
+                        <td class="p-2" colspan="2"><p style="color: red;" id="msg"></p></td>
+                    </tr>
+                    <tr>
+                        <td class="p-2"><label for="userName">Username: </label></td>
+                        <td class="p-2"><input type="text" name="userName" id="userName" placeholder="username"></td>
+                    </tr>
+                        
+                    <tr>
+                        <td class="p-2"><label for="password">Password:  </label></td>
+                        <td class="p-2"><input type="password" name="password" id="password" placeholder="password"></td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2" class="p-2" style="text-align: center;">
+                            <button name="login" id="login" style="width: 150px;" onclick="login()">
+                                login
+                            </button> 
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-4"></div>
+        </div>
+    </div>
+
+    <div id="homeBody" class="home-body" style="display: none;">
+        
+        <div class="row p-5">
+            <div class="col-2"></div>
+            <div class="col-8">
+                <div class="row">
+                    <div class="col-4 p-2"><button name="menu1" id="menu1" style="width: 100%;" onclick="menu1()">
+                        Generate paper
+                    </button> </div>
+                    
+                    <div class="col-4 p-2"><button name="menu2" id="menu2" style="width: 100%;" onclick="menu2()">
+                        Validate paper
+                    </button> </div>
+
+                    <div class="col-4 p-2"><button name="menu3" id="menu3" style="width: 100%;" onclick="menu3()">
+                        Logout
+                    </button> </div>
+                </div>
+
+                <div id="Menu1" style="display: none;">
+                    <center>
+                    <table>
+                        <tr>
+                            <td class="p-2"><label for="sub">Select subject: </label></td>
+                            <td colspan="2" class="p-2"><select type="text" name="sub" id="sub" style="width: 100%;"></select><td>
+                        </tr>
+
+                        
+                        <tr>
+                            <td class="p-2"><label for="sub">Number of Paper: </label></td>
+                            <td colspan="2" class="p-2"><input type="number" name="npaper" id="npaper" style="width: 100%;"><td>
+                        </tr>
+                        <tr>
+                            <td class="p-2" colspan="3"><button name="gPaper" id="gPaper" style="width: 100%;" onclick="generatePaper()">
+                                Submit</td>
+                        </tr>
+
+                        <tr>
+                            <td class="p-2" colspan="3"><p id="paperMsg"></p></td>
+                        </tr>
+                    </table>
+                    </center>
+                </div>
+
+                
+                <div id="Menu2" style="display: none;">
+                    <center>
+                        <table>
+                            <tr>
+                                <td class="p-2"><label for="psetId">Select Paper Set ID: </label></td>
+                                <td class="p-2"><select type="text" name="psetId" id="psetId" style="width: 100%;" onclick="selectPaperSet()"></select><td>
+                            </tr> 
+                            <tr>
+                                <td class="p-2"><label for="cid">Course Id: </label></td>
+                                <td class="p-2"><input type="text" name="cid" id="cid" style="width: 100%;" disabled><td>
+                                <td class="p-2"><label for="marks">Total Marks: </label></td>
+                                <td class="p-2"><input type="text" name="marks" id="marks" style="width: 100%;"disabled><td>
+                            </tr>
+                            <tr>
+                                <td class="p-2"><label for="np">Total Question Paper : </label></td>
+                                <td class="p-2"><input type="text" name="np" id="np" style="width: 100%;"disabled><td>
+                                <td class="p-2"><label for="ns">Total Section: </label></td>
+                                <td class="p-2"><input type="text" name="ns" id="ns" style="width: 100%;"disabled><td>
+                            </tr> 
+                            <tr>
+                                <td class="p-2"><label for="pnumber">Select Paper Number: </label></td>
+                                <td colspan="2" class="p-2"><select type="text" name="pnumber" id="pnumber" style="width: 100%;" onclick="selectPaper()"></select><td>
+                                <td><button name="vaid" id="valid" style="width: 100%;" onclick="validatePaperSet()">
+                                    Validate
+                                </button> </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="4" id="paper">
+                                    <table id="ptable"></table>
+                                </td>
+                            </tr> 
+                        </table>
+                    </center>
+
+                </div>
+
+             
+            </div>
+            <div class="col-2"></div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
